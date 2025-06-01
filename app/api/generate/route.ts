@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod.mjs';
+import { z } from 'zod';
+
+const scenariosListFormat = z.object({
+  scenarios: z.array(z.object({
+    title: z.string(),
+    description: z.string()
+  }))
+});
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,26 +18,30 @@ export async function POST(request: NextRequest) {
   try {
     const { productDescription, problem, targetAudience } = await request.json();
 
-    const prompt = `Generate 50 unique and creative Instagram Reel scenarios (10 seconds each) to promote the following product:
+    const prompt = `Generate 20 distinct, 10-second Instagram Reel scenarios to promote a product. Use the following inputs:
 
-Product Description: ${productDescription}
-Problem it solves: ${problem}
-Target Audience: ${targetAudience}
+<Product Description>
+${productDescription}
+</Product Description>
 
-Each scenario should be:
-- Engaging and attention-grabbing
-- Suitable for a 10-second video format
-- Relevant to the target audience
-- Show the product's value proposition
-- Be diverse in approach (testimonials, demonstrations, before/after, storytelling, etc.)
-- Do not try to showcase the product features - they will be inserted separately by hands
-- Try to focus on people that are target audience and in the problem space doing something that is relevant
-- Something happens that is catasthropic or extraordinary to grab target audience attention
+<Problem it solves>
+${problem}
+</Problem it solves>
 
-Format each scenario as:
-Number. Title: Brief description of the scenario
+<Target Audience>
+${targetAudience}
+</Target Audience>
 
-Please ensure variety in the scenarios to give multiple creative options.`;
+Requirements for each scenario:
+    - Grabs attention immediately (catastrophic or extraordinary event);
+    - Centers on someone from the target audience;    
+    - Fits a 5-second format short one action clip;
+    - Varies in action and style.
+
+Output format for each scenario:
+N. Title: Detailed description of the scene and action
+
+Ensure diverse approaches and keep every scenario focused on the user's pain point and a dramatic hook.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -44,27 +57,20 @@ Please ensure variety in the scenarios to give multiple creative options.`;
       ],
       temperature: 0.8,
       max_tokens: 3000,
+      response_format: zodResponseFormat(scenariosListFormat, 'scenarios')
     });
 
     const content = completion.choices[0].message.content || '';
-    
-    const scenarios = content.split('\n')
-      .filter(line => line.trim() && /^\d+\./.test(line.trim()))
-      .map((line, index) => {
-        const match = line.match(/^\d+\.\s*([^:]+):\s*(.+)$/);
-        if (match) {
-          return {
-            id: index + 1,
-            title: match[1].trim(),
-            description: match[2].trim(),
-            selected: false
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
+    const scenarios = JSON.parse(content);
 
-    return NextResponse.json({ scenarios });
+    return NextResponse.json({ 
+      scenarios: scenarios.scenarios.map((scenario: any, index: number) => ({
+        id: index + 1,
+        title: scenario.title,
+        description: scenario.description,
+        selected: false
+      }))
+    });
   } catch (error) {
     console.error('Error generating scenarios:', error);
     return NextResponse.json(

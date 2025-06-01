@@ -71,7 +71,7 @@ function ScenariosContent() {
 
   const exportSelected = () => {
     const text = selectedScenarios
-      .map(s => `${s.id}. ${s.title}: ${s.description}`)
+      .map(s => `${s.title}: ${s.description}`)
       .join('\n\n');
     
     const blob = new Blob([text], { type: 'text/plain' });
@@ -155,7 +155,7 @@ function ScenariosContent() {
             >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-gray-800 flex-1">
-                  {scenario.id}. {scenario.title}
+                  {scenario.title}
                 </h3>
                 <input
                   type="checkbox"
