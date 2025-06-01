@@ -21,6 +21,9 @@ Each scenario should be:
 - Relevant to the target audience
 - Show the product's value proposition
 - Be diverse in approach (testimonials, demonstrations, before/after, storytelling, etc.)
+- Do not try to showcase the product features - they will be inserted separately by hands
+- Try to focus on people that are target audience and in the problem space doing something that is relevant
+- Something happens that is catasthropic or extraordinary to grab target audience attention
 
 Format each scenario as:
 Number. Title: Brief description of the scenario
@@ -28,7 +31,7 @@ Number. Title: Brief description of the scenario
 Please ensure variety in the scenarios to give multiple creative options.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

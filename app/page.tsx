@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -10,6 +10,17 @@ export default function Home() {
     problem: '',
     targetAudience: ''
   });
+
+  useEffect(() => {
+    const savedData = localStorage.getItem('reelGeneratorFormData');
+    if (savedData) {
+      setFormData(JSON.parse(savedData));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('reelGeneratorFormData', JSON.stringify(formData));
+  }, [formData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,10 +76,10 @@ export default function Home() {
             <label htmlFor="targetAudience" className="block text-sm font-medium text-gray-700 mb-2">
               Target Audience
             </label>
-            <input
-              type="text"
+            <textarea
               id="targetAudience"
               required
+              rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Who is your target audience?"
               value={formData.targetAudience}
