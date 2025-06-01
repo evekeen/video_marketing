@@ -68,6 +68,44 @@ function ScenariosContent() {
   };
 
   const selectedScenarios = scenarios.filter(s => s.selected);
+  const [generatingVideos, setGeneratingVideos] = useState(false);
+
+  const generateVideos = async () => {
+    if (selectedScenarios.length === 0) {
+      alert('Please select at least one scenario');
+      return;
+    }
+
+    setGeneratingVideos(true);
+    
+    try {
+      const response = await fetch('/api/generate-videos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          scenarios: selectedScenarios
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate videos');
+      }
+
+      const data = await response.json();
+      
+      const queryParams = new URLSearchParams({
+        videos: JSON.stringify(data.videos)
+      });
+      
+      router.push(`/videos?${queryParams.toString()}`);
+    } catch (error) {
+      console.error('Error generating videos:', error);
+      alert('Failed to generate videos. Please try again.');
+      setGeneratingVideos(false);
+    }
+  };
 
   const exportSelected = () => {
     const text = selectedScenarios
@@ -169,6 +207,33 @@ function ScenariosContent() {
             </div>
           ))}
         </div>
+
+        {selectedScenarios.length > 0 && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={generateVideos}
+              disabled={generatingVideos}
+              className="bg-green-600 text-white px-8 py-3 rounded-md font-medium text-lg hover:bg-green-700 disabled:bg-green-400 shadow-lg"
+            >
+              Generate Videos ({selectedScenarios.length} selected)
+            </button>
+          </div>
+        )}
+
+        {generatingVideos && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4">
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mb-4"></div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Generating Videos</h3>
+                <p className="text-gray-600 text-center">
+                  Creating {selectedScenarios.length} video{selectedScenarios.length > 1 ? 's' : ''} with AI...
+                </p>
+                <p className="text-sm text-gray-500 mt-2">This may take a few minutes</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
